@@ -1,0 +1,14 @@
+option.INFOMATION = This Shader
+value.INFOMATION.A = By Coldnight
+value.INFOMATION.B = Modified By Tax
+
+screen.SURFACE = Surface
+
+screen.POM = POM
+option.PARALLAX = Parallax
+option.POM_STEPS = POM Steps
+option.POM_REFINEMENT_STEPS = POM Refinement Steps
+option.POM_DEPTH_SCALE = POM Depth
+option.PARALLAX_SHADOW = Parallax Shadow
+option.POM_SHADOW_STEPS = POM Shadow Steps
+option.POM_SHADOW_SOFTNESS = POM Shadow Softness

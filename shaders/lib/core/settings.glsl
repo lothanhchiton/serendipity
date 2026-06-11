@@ -93,3 +93,14 @@ vec3 handPosition2 = vec3(-0.9, -0.65, -near - 0.1);
 //#define VanillaAO
 #define WaterCaustics_ON
 //#define REFLECTED_CLOUD
+
+// #define PARALLAX
+#define POM_STEPS 32 // [8 12 16 20 24 28 32 36 40 44 48 52 56 60 64]
+#define POM_REFINEMENT_STEPS 8 // [2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32]
+#define POM_DEPTH_SCALE 3.0 // [0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0]
+
+// #define PARALLAX_SHADOW
+#define POM_SHADOW_STEPS 16 // [8 16 32 64]
+#define POM_SHADOW_SOFTNESS 12.0 // [1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0 9.5 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0 18.0 19.0 20.0]
+
+#define INFOMATION A // [A B]

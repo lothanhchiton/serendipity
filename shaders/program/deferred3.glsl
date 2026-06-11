@@ -1,3 +1,5 @@
+
+
 #include "/lib/basefiles.glsl"
 
 varying vec2 texcoord;
@@ -14,12 +16,12 @@ varying vec4 skySHB;
         gl_Position = ftransform();
         texcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 
-        suncol   = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(0, 0), 0).rgb;
-        mooncol  = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(1, 0), 0).rgb;
+        suncol = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(0, 0), 0).rgb;
+        mooncol = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(1, 0), 0).rgb;
         lightcol = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(2, 0), 0).rgb;
-        skySHR   = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(3, 0), 0);
-        skySHG   = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(4, 0), 0);
-        skySHB   = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(5, 0), 0);
+        skySHR = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(3, 0), 0);
+        skySHG = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(4, 0), 0);
+        skySHB = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(5, 0), 0);
     }
 
 #endif
@@ -40,7 +42,7 @@ varying vec4 skySHB;
 
         if(depth < 1.0) {
             vec3 data0 = texelFetch(colortex0, texelUV, 0).rgb;
-            vec3 data1 = texelFetch(colortex1, texelUV, 0).rgb;
+            vec4 data1 = texelFetch(colortex1, texelUV, 0);
             vec4 data2 = texelFetch(colortex2, texelUV, 0);
             vec4 data3 = texelFetch(colortex3, texelUV, 0);
             vec4 data4 = texture(colortex4, texcoord * 0.5);
@@ -72,8 +74,14 @@ varying vec4 skySHB;
                 roughness = 1.0;
             } else if(dot(worldNormal, lightDir) > 0.0) {
                 shadow = getShadow(worldPos + worldNormal * 0.01 * worldDis);
-                //shadow = vec3(getScreenShadow(viewPos));
             }
+
+            #if defined PARALLAX && defined PARALLAX_SHADOW
+                if (!isHand && !isGrass) {
+                    shadow *= data1.a;
+                }
+            #endif
+
             float repairlightleakage = isEyeInWater == 0 ? linearstep(0.035, 0.1, uv1.y) : 1.0;
 
             vec3 sunlight = suncol * shadow;
