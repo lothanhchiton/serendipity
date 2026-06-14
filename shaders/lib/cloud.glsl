@@ -200,7 +200,7 @@
         lightLuminance *= remapSaturate(lightDir.y, 0.02, 0.1, 0.0, 1.0);
         vec3 lightColor = lightLuminance * TransToAtmos(cloudpos, lightDir);
 
-        float frequency = 500.0;
+        float frequency = 700.0;
         float weight = 1.0;
         float time = 0.01 * frameTimeCounter;
 
@@ -217,8 +217,9 @@
             time *= 1.1;
         }
         n /= c;
-        float cloudRange = 0.55;
-        float cloudDensity = remapSaturate(n - 1.0 + cloudRange, 0.0, cloudRange, 0.0, 1.0) * 0.07 * CloudDensityMultiplier;
+
+        float cloudRange = 0.35;
+        float cloudDensity = remapSaturate(n - 1.0 + cloudRange, 0.0, cloudRange, 0.0, 1.0) * 0.035 * CloudDensityMultiplier;
         if(cloudDensity < 1e-5) return vec4(0.0, 0.0, 0.0, 1.0);
 
         float cosTheta = dot(lightDir, dir);
