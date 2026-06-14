@@ -89,6 +89,9 @@ uniform sampler2D shadowtex1;
 uniform sampler2D shadowcolor0;
 uniform sampler2D shadowcolor1;
 
+//uniform sampler3D cloudNoise3D;
+//uniform sampler3D detailedCloudNoise3D;
+
 uniform float alphaTestRef;
 
 #ifdef FSH

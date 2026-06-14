@@ -22,8 +22,6 @@
         float c = 0.0;
         for(int i = 0; i < 4; i++) {
             n += perlin2D(pos.xz * frequency + time) * weight;
-            //n += simplex2d(pos.xz * 0.75 * frequency + time) * weight;
-            //n += sample2DNoise(pos.xz * 1.5 * frequency + time) * weight;
             c += weight;
 
             frequency *= 2.0;
@@ -34,8 +32,10 @@
 
         float cloudmap = saturate((sample2DNoise(pos.xz * 0.2 + frameTimeCounter * 0.01) * 3.0 - 0.5) * 0.5 + 0.5);
         n *= cloudmap;
-        n = max0(n - mix(0.5, 0.1, rainStrength));
-        n = remapSaturate(n, 0.0, 0.5, 0.0, 1.0);
+
+        float bias = mix(0.5, 0.1, rainStrength);
+        n = max0(n - bias) / max(1.0 - bias, 1e-4);
+        n = saturate(n);
 
         float frequency1 = 5.0;
         float weight1 = 1.0;
@@ -54,11 +54,18 @@
         n1 /= c1;
 
         float h = saturate((length(pos) - CloudBottomHeight) / CloudThickness);
-        float s = smoothstep(0.2, 0.0, h) + smoothstep(0.2, 1.0, h);
-        s = s * 0.8 + 0.2 + 0.05;
 
-        return max0(n - n1 * s * 0.6) * CloudDensityMultiplier;
-        //return remapSaturate(n, 1.0 - n1 * s * 0.6, 1.0, 0.0, 1.0) * 1.0;
+        float s = smoothstep(0.0, 1.0, h);
+        s = s * 0.8 + 0.25;
+
+        if(n <= 0.0) return 0.0;
+
+        n = remapSaturate(n, n1 * s * 0.6, 1.0, 0.0, 1.0);
+
+        float bottomFade = smoothstep(0.0, 0.08, h);
+        n *= bottomFade;
+
+        return saturate(n) * CloudDensityMultiplier;
     }
     float CloudOpticalDepth(vec3 pos, vec3 dir, float len, float currDensity, int N_SAMPLE) {
         if(len <= 0.0) return 0.0;
@@ -128,7 +135,7 @@
         float phase = mix(forwardPhase, rearPhase, 0.2);
         float uniform_phase = 1.0 / (4.0 * PI);
 
-        int sampleCount = int(mix(24.0, 6.0, abs(dir.y)));
+        int sampleCount = int(mix(72.0, 18.0, abs(dir.y)));
         //const int sampleCount = 12;
 
         float ds = len / float(sampleCount);
