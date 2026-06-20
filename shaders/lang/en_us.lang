@@ -54,3 +54,10 @@ value.DOF_FOCUS_MODE.0 = Auto-Focus
 value.DOF_FOCUS_MODE.1 = Manual
 option.DOF_MANUAL_DIST = Manual Dist
 option.DOF_BOKEH_SHAPE = Bokeh Shape
+
+screen.MOTION_BLUR = Motion Blur
+option.MOTION_BLUR = Motion Blur
+option.MOTION_BLUR_SKY = Blur Sky
+option.MOTION_BLUR_STRENGTH = Strength
+option.MOTION_BLUR_MAX_PX = Max Pixels
+option.MOTION_BLUR_SAMPLES = Samples
