@@ -133,6 +133,11 @@ varying vec3 upskylight;
             vec3 viewReflectDir = normalize(mat3(gbufferModelView) * worldReflectDir);
             screenRayTracingDDA(viewPos, viewReflectDir, rayTracingPos, rayTracingIsHit);
 
+            if(rayTracingIsHit) {
+                float hitBlockID = texture(colortex1, rayTracingPos).b * 10000.0;
+                if(abs(hitBlockID - 9999.0) < 0.5) rayTracingIsHit = false;
+            }
+
             vec3 rayTracingCol;
             if(rayTracingIsHit) {
                 vec2 prevUV = getPreCoord(rayTracingPos.xy);
@@ -142,8 +147,6 @@ varying vec3 upskylight;
                 vec3 trans = TransToAtmos(cameraLocation, worldReflectDir);
                 rayTracingCol = drawSun(rayTracingCol, worldReflectDir, trans);
                 #ifdef REFLECTED_CLOUD
-                    vec4 cloud2D = RenderCloud2D(cameraLocation, worldReflectDir, lightDir, lightLuminance);
-                    rayTracingCol = rayTracingCol * cloud2D.a + cloud2D.rgb;
                     vec4 cloud3D = RenderCloud(cameraLocation, worldReflectDir, lightDir, lightLuminance, upskylight);
                     rayTracingCol = rayTracingCol * cloud3D.a + cloud3D.rgb;
                 #endif

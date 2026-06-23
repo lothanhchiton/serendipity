@@ -1,19 +1,26 @@
+
+
 #include "/lib/basefiles.glsl"
 
 varying vec2 lmcoord;
 varying vec2 texcoord;
 varying vec4 glcolor;
 varying vec3 normal;
+varying mat3 tbnMatrix;
+varying vec3 viewDirTS;
+varying vec4 tileBounds;
 
 #ifdef VSH
+
+    in vec4 at_tangent;
+    in vec2 mc_midTexCoord;
 
     void main() {
         vec3 model_pos = gl_Vertex.xyz;
         vec4 view_pos = gl_ModelViewMatrix * vec4(model_pos, 1.0);
-        //if(abs(mc_Entity.x - 10.5) < 1.0) view_pos.y += 10000.0;
         vec4 clip_pos = gl_ProjectionMatrix * view_pos;
         #ifdef TAA
-	        clip_pos.xy += taaJitter * TAA_Intensity * clip_pos.w;
+            clip_pos.xy += taaJitter * TAA_Intensity * clip_pos.w;
         #endif
         gl_Position = clip_pos;
 
@@ -23,11 +30,27 @@ varying vec3 normal;
         glcolor = gl_Color;
         normal = gl_NormalMatrix * gl_Normal;
         normal = mat3(gbufferModelViewInverse) * normal;
+
+        vec3 tangent = gl_NormalMatrix * normalize(at_tangent.xyz);
+        tangent = normalize(mat3(gbufferModelViewInverse) * tangent);
+        tbnMatrix = mat3(tangent, normalize(cross(tangent, normal) * at_tangent.w), normal);
+
+        vec3 vsPos = view_pos.xyz;
+        vec3 wvDir = normalize(mat3(gbufferModelViewInverse) * vsPos);
+        viewDirTS = vec3(dot(wvDir, tbnMatrix[0]),
+                         dot(wvDir, tbnMatrix[1]),
+                         dot(wvDir, tbnMatrix[2]));
+
+        vec2 midUV = (gl_TextureMatrix[0] * vec4(mc_midTexCoord, 0.0, 1.0)).xy;
+        vec2 halfExt = abs(texcoord - midUV);
+        tileBounds = vec4(midUV - halfExt, midUV + halfExt);
     }
 
 #endif
 
 #ifdef FSH
+
+    #include "/lib/parallax.glsl"
 
     /* RENDERTARGETS: 0,1,2,3 */
     layout(location = 0) out vec4 color0;
@@ -36,19 +59,40 @@ varying vec3 normal;
     layout(location = 3) out vec4 color3;
 
     void main() {
-        vec4 texcolor = texture(gtexture, texcoord);
+        #ifdef ITEM_PARALLAX
+            float pomRayDepth, pomShadow;
+            vec3 lDirTS = vec3(dot(lightDir, tbnMatrix[0]),
+                               dot(lightDir, tbnMatrix[1]),
+                               dot(lightDir, tbnMatrix[2]));
+            vec2 pomUV = parallaxOcculusionMappingShadow(texcoord, viewDirTS, lDirTS, tileBounds, pomRayDepth, pomShadow);
+        #else
+            vec2 pomUV = texcoord;
+            float pomShadow = 1.0;
+        #endif
+
+        vec4 texcolor = texture(gtexture, pomUV);
         if(texcolor.a < alphaTestRef) {
             discard;
         }
         texcolor.rgb *= glcolor.rgb;
-        //texcolor.rgb *= texture(lightmap, lmcoord).rgb;
 
-        vec4 normalData = texture(normals, texcoord);
-        vec4 specularData = texture(specular, texcoord);
+        #ifdef ITEM_PARALLAX
+            vec4 normalData = texture(normals, pomUV);
+            normalData.xyz = normalize(normalData.xyz * 2.0 - 1.0);
+            vec3 mappedNormal = normalize(tbnMatrix * normalData.xyz);
+            vec4 specularData = texture(specular, pomUV);
+
+            color2 = vec4(normalEncode(normal), normalEncode(mappedNormal));
+            color1 = vec4(lmcoord, 9999.0 / 10000.0, pomShadow);
+        #else
+            vec4 normalData = texture(normals, pomUV);
+            vec4 specularData = texture(specular, pomUV);
+
+            color2 = vec4(normalEncode(normal), normalEncode(normal));
+            color1 = vec4(lmcoord, 9999.0 / 10000.0, 1.0);
+        #endif
 
         color0 = vec4(texcolor.rgb, 1.0);
-        color1 = vec4(lmcoord, 9999.0 / 10000.0, 1.0);
-        color2 = vec4(normalEncode(normal), normalEncode(normal));
         color3 = vec4(specularData);
     }
 

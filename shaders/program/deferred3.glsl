@@ -164,28 +164,26 @@ varying vec4 skySHB;
             outcol = directlight + ambientlight + ssslight + blocklight + handlight + baselight;
 
             #ifdef SPECULAR_REFLECTION
-                if(!isHand) {
-                    float smoothness = 1.0 - roughness;
-                    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+                float smoothness = 1.0 - roughness;
+                vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-                    vec3 worldReflectDir = reflect(worldDir, worldNormal);
-                    vec3 viewReflectDir = normalize(mat3(gbufferModelView) * worldReflectDir);
+                vec3 worldReflectDir = reflect(worldDir, worldNormal);
+                vec3 viewReflectDir = normalize(mat3(gbufferModelView) * worldReflectDir);
 
-                    vec2 rayTracingPos = vec2(0.0);
-                    bool rayTracingIsHit = false;
-                    screenRayTracingDDA(viewPos, viewReflectDir, rayTracingPos, rayTracingIsHit);
+                vec2 rayTracingPos = vec2(0.0);
+                bool rayTracingIsHit = false;
+                screenRayTracingDDA(viewPos, viewReflectDir, rayTracingPos, rayTracingIsHit);
 
-                    vec3 reflectionCol = sampleSkybox(worldReflectDir) * uv1.y;
-                    if(rayTracingIsHit) {
-                        vec2 prevUV = getPreCoord(rayTracingPos.xy);
-                        reflectionCol = texture(colortex7, outScreen(prevUV) ? rayTracingPos.xy : prevUV).rgb;
-                    }
-
-                    float fresnel = fresnelSchlick(max0(dot(worldNormal, -worldDir)), 0.04);
-                    vec3 specF = mix(vec3(fresnel), F0, metallic);
-
-                    outcol += reflectionCol * specF * pow2(smoothness);
+                vec3 reflectionCol = sampleSkybox(worldReflectDir) * uv1.y;
+                if(rayTracingIsHit) {
+                    vec2 prevUV = getPreCoord(rayTracingPos.xy);
+                    reflectionCol = texture(colortex7, outScreen(prevUV) ? rayTracingPos.xy : prevUV).rgb;
                 }
+
+                float fresnel = fresnelSchlick(max0(dot(worldNormal, -worldDir)), 0.04);
+                vec3 specF = mix(vec3(fresnel), F0, metallic);
+
+                outcol += reflectionCol * specF * pow2(smoothness);
             #endif
 
             if(rainStrength > 1e-6 && uv1.y > 1e-6 && !isGrass) {

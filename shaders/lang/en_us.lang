@@ -36,6 +36,8 @@ option.SPECULAR_REFLECTION = Specular Reflection
 
 screen.POM = POM
 option.PARALLAX = Parallax
+option.ITEM_PARALLAX = Item Parallax
+option.ENTITY_PARALLAX = Entity Parallax
 option.POM_STEPS = POM Steps
 option.POM_REFINEMENT_STEPS = POM Refinement Steps
 option.POM_DEPTH_SCALE = POM Depth
