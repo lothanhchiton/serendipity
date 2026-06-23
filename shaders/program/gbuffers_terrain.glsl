@@ -62,7 +62,7 @@ varying vec3 worldPos;
 #ifdef FSH
 
      #include "/lib/parallax.glsl"
-     #include "/lib/rainPuddles.glsl"
+     #include "/lib/rainpuddles.glsl"
 
     /* RENDERTARGETS: 0,1,2,3 */
     layout(location = 0) out vec4 color0;

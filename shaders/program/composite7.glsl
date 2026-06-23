@@ -1,3 +1,5 @@
+
+
 #include "/lib/basefiles.glsl"
 
 varying vec2 texcoord;
@@ -13,7 +15,10 @@ varying vec2 texcoord;
 
 #ifdef FSH
 
+    #include "/lib/sky.glsl"
+    #include "/lib/cloud.glsl"
     #include "/lib/bloom.glsl"
+    #include "/lib/lensflare.glsl"
 
     /* RENDERTARGETS: 0 */
     layout(location = 0) out vec4 color0;
@@ -34,6 +39,10 @@ varying vec2 texcoord;
             mixFactor = mix(0.05, 0.1, remapSaturate(cameraPosition.y, 64.0, 50.0, 0.0, 1.0));
         }
         outcol = mix(outcol, bloom, mixFactor);
+
+        #ifdef LENS_FLARE
+            outcol += lensFlare(texcoord);
+        #endif
 
         color0 = vec4(outcol, 1.0);
     }

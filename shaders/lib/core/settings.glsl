@@ -1,4 +1,3 @@
-#define MAT_ICE 10.0
 
 /*
 const int colortex0Format = RGB16F;
@@ -156,3 +155,6 @@ vec3 handPosition2 = vec3(-0.9, -0.65, -near - 0.1);
 #define MOTION_BLUR_MAX_PX 32.0 // [16.0 32.0 64.0]
 #define MOTION_BLUR_SAMPLES 16 // [8 16 24 32 40 48 52 60 68 72]
 #define MOTION_BLUR_SKY
+
+#define LENS_FLARE
+#define FLARE_BRIGHTNESS 1.0 // [0.1 0.2 0.3 0.5 0.7 1.0 1.5 2.0 3.0 5.0 7.0 10.0 15.0 20.0]

@@ -47,6 +47,10 @@ option.POM_SHADOW_SOFTNESS = POM Shadow Softness
 
 screen.POST = Post-Processing
 
+screen.FLARE = Lens Flare
+option.LENS_FLARE = Lens Flare
+option.FLARE_BRIGHTNESS = Brightness
+
 screen.DOF = Depth Of Field
 option.DOF = DOF
 option.DOF_BLUR_SKY = Blur Sky
