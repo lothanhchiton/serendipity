@@ -41,29 +41,35 @@ varying vec3 upskylight;
 
             if(isEyeInWater == 0) {
                 #ifndef DIM_END
-                    vec3 outsca = atmosOutSca(worldDir, worldDis);
-                    outcol = outcol * outsca + insca;
+                    #ifdef VFOG
+                        float fogTransmittance = textureBicubic(colortex4, texcoord * 0.5, viewSize).a;
+                        vec3 outsca = atmosOutSca(worldDir, worldDis) * fogTransmittance;
+                        outcol = outcol * outsca + insca;
+                    #else
+                        vec3 outsca = atmosOutSca(worldDir, worldDis);
+                        outcol = outcol * outsca + insca;
 
-                    float fog = heightFog(worldDir, worldDis).r;
-                    float godray = texture(colortex4, texcoord * 0.5 + 0.5).r;
+                        float fog = heightFog(worldDir, worldDis).r;
+                        float godray = texture(colortex4, texcoord * 0.5 + 0.5).r;
 
-                    float fogFactorDry = remapSaturate(lightDir.y, 0.0, 0.5, 1.0, 0.0);
-                    float fogFactorWet = saturate(rainStrength);
-                    float isRaining = step(1e-6, rainStrength);
+                        float fogFactorDry = remapSaturate(lightDir.y, 0.0, 0.5, 1.0, 0.0);
+                        float fogFactorWet = saturate(rainStrength);
+                        float isRaining = step(1e-6, rainStrength);
 
-                    fog = saturate(fog * godray * mix(fogFactorDry, fogFactorWet, isRaining));
-                    if(fog > 0.0) {
-                        vec3 skylight = upskylight;
-                        float cosTheta = dot(lightDir, worldDir);
-                        float forwardPhase = getPhase(cosTheta, 0.75);
-                        float rearPhase = getPhase(cosTheta, -0.2);
-                        float phase = mix(forwardPhase, rearPhase, 0.2);
+                        fog = saturate(fog * godray * mix(fogFactorDry, fogFactorWet, isRaining));
+                        if(fog > 0.0) {
+                            vec3 skylight = upskylight;
+                            float cosTheta = dot(lightDir, worldDir);
+                            float forwardPhase = getPhase(cosTheta, 0.75);
+                            float rearPhase = getPhase(cosTheta, -0.2);
+                            float phase = mix(forwardPhase, rearPhase, 0.2);
 
-                        float oneMinusRain = 1.0 - rainStrength;
-                        vec3 fogColor = lightcol * (oneMinusRain * phase) + skylight * (1.0 + rainStrength);
-                        fogColor *= remapSaturate(lightDir.y, 0.0, 0.25, 0.0, 1.0);
-                        outcol = mix(outcol, fogColor, fog);
-                    }
+                            float oneMinusRain = 1.0 - rainStrength;
+                            vec3 fogColor = lightcol * (oneMinusRain * phase) + skylight * (1.0 + rainStrength);
+                            fogColor *= remapSaturate(lightDir.y, 0.0, 0.25, 0.0, 1.0);
+                            outcol = mix(outcol, fogColor, fog);
+                        }
+                    #endif
                 #else
                     _vcRender(outcol, worldDir, blueNoise, worldDis);
                 #endif

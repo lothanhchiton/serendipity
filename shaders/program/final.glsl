@@ -1,3 +1,5 @@
+
+
 #include "/lib/basefiles.glsl"
 
 varying vec2 texcoord;
@@ -15,6 +17,7 @@ varying vec2 texcoord;
 
     #include "/lib/final.glsl"
     #include "/lib/exposure.glsl"
+    #include "/lib/textrenderer.glsl"
 
     /* RENDERTARGETS: 0 */
     layout(location = 0) out vec4 color0;
@@ -51,6 +54,23 @@ varying vec2 texcoord;
 
         outcol = agx(outcol);
         outcol = LinearToGamma(outcol);
+
+        float wmScale = viewHeight / 1080.0;
+        wmScale = max(wmScale, 1.0);
+
+        ivec2 wmFragPos = ivec2(gl_FragCoord.xy / wmScale);
+        ivec2 wmTextPos = ivec2(4.0 / wmScale, 18.0 / wmScale);
+
+        beginText(wmFragPos, wmTextPos);
+
+        text.fgCol = vec4(1.0, 1.0, 1.0, 0.85);
+        text.bgCol = vec4(0.0, 0.0, 0.0, 0.4);
+
+        printString((_S,_e,_r,_e,_n,_d,_i,_p,_i,_t,_y,_space,_B,_y,_space,_L,_o,_T,_h,_a,_n,_h,_C,_h,_i,_T,_o,_n));
+        printLine();
+        printString((_copyr,_l,_o,_t,_h,_a,_n,_h,_c,_h,_i,_t,_o,_n,_n,_n));
+
+        endText(outcol);
 
         color0 = vec4(outcol, 1.0);
     }

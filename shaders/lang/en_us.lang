@@ -33,6 +33,15 @@ option._vc2 = Brightness
 option._vc3 = Angle
 suffix._vc3 = °
 
+screen.FOG = Volumetric Fog
+option.VFOG = VFog
+option.REFLECTED_FOG = Fog Reflection
+option.FOG_QUALITY = Quality
+option.FOG_DENSITY = Density
+option.FOG_NOISE_SCALE = Noise Scale
+option.FOG_HEIGHT = Height
+option.FOG_FALLOFF = Falloff
+
 screen.LIGHTING = Lighting
 
 option.LIGHT_MODE = Light Mode
@@ -43,7 +52,6 @@ option.SSPT_MAX_FRAMES = Temporal Accumulation Max Frames
 
 screen.SURFACE = Surface
 
-option.RAIN_PUDDLES = Rain Puddles
 option.SPECULAR_REFLECTION = Specular Reflection
 
 screen.POM = POM
@@ -56,6 +64,12 @@ option.POM_DEPTH_SCALE = POM Depth
 option.PARALLAX_SHADOW = Parallax Shadow
 option.POM_SHADOW_STEPS = POM Shadow Steps
 option.POM_SHADOW_SOFTNESS = POM Shadow Softness
+
+screen.RAIN = Rain
+option.RAIN_PUDDLES = Rain Puddles
+option.RAIN_SPLASH = Rain Splash
+option.RIPPLE_SCALE = Rain Splash Scale
+option.RIPPLE_SPEED = Rain Splash Speed
 
 screen.POST = Post-Processing
 

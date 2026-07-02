@@ -55,6 +55,7 @@ varying vec3 upskylight;
     #include "/lib/water.glsl"
     #include "/lib/stars.glsl"
     #include "/lib/end.glsl"
+    #include "/lib/volumetricfog.glsl"
 
     /* RENDERTARGETS: 0 */
     layout(location = 0) out vec4 color0;
@@ -69,6 +70,7 @@ varying vec3 upskylight;
 
         vec3 screenPos = (clip_pos.xyz / clip_pos.w) * 0.5 + 0.5;
         vec3 outcol = vec3(0.0);
+
         if(abs(blockID - 8.0) < 0.5 || abs(blockID - 9.0) < 0.5) {
             vec3 viewPos = view_pos.xyz;
             vec3 worldPos = matrixMultiply(gbufferModelViewInverse, vec4(viewPos, 1.0));
@@ -85,7 +87,7 @@ varying vec3 upskylight;
             outcol = texture(colortex4, distortCoord).rgb;
 
             float viewdepth = abs(
-                linearDepth(texture(depthtex1, screenPos.xy).r) * float(isEyeInWater == 0) - 
+                linearDepth(texture(depthtex1, screenPos.xy).r) * float(isEyeInWater == 0) -
                 linearDepth(screenPos.z)
             );
             vec3 skylight = upskylight;
@@ -116,6 +118,11 @@ varying vec3 upskylight;
                     rayTracingCol = rayTracingCol * cloud3D.a + cloud3D.rgb;
                 #endif
                 rayTracingCol *= lmcoord.y;
+            #endif
+
+            #ifdef REFLECTED_FOG
+                vec4 reflFog = RenderVFog(worldReflectDir, 1e6, lightDir, lightLuminance, skylight, 1.0);
+                rayTracingCol = rayTracingCol * reflFog.a + reflFog.rgb;
             #endif
 
             vec2 rayTracingPos = vec2(0.0);
@@ -169,17 +176,84 @@ varying vec3 upskylight;
                     #ifdef REFLECTED_CLOUD
                         vec4 cloudHigh = RenderCloudHigh(cameraLocation, worldReflectDir, lightDir, lightLuminance);
                         rayTracingCol = rayTracingCol * cloudHigh.a + cloudHigh.rgb;
+
                         vec4 cloud2D = RenderCloud2D(cameraLocation, worldReflectDir, lightDir, lightLuminance);
                         rayTracingCol = rayTracingCol * cloud2D.a + cloud2D.rgb;
+
                         vec4 cloud3D = RenderCloud(cameraLocation, worldReflectDir, lightDir, lightLuminance, skylight);
                         rayTracingCol = rayTracingCol * cloud3D.a + cloud3D.rgb;
                     #endif
                     rayTracingCol *= lmcoord.y;
                 #endif
+
+                #ifdef REFLECTED_FOG
+                    vec4 reflFog = RenderVFog(worldReflectDir, 1e6, lightDir, lightLuminance, skylight, 1.0);
+                    rayTracingCol = rayTracingCol * reflFog.a + reflFog.rgb;
+                #endif
             }
 
             float fresnel = fresnelSchlick(max0(dot(worldNormal, -worldDir)), 0.04);
             outcol = mix(outcol, rayTracingCol, max(fresnel, 0.97));
+        } else if(abs(blockID - 95.0) < 0.5) {
+            vec3 viewPos = view_pos.xyz;
+            vec3 worldPos = matrixMultiply(gbufferModelViewInverse, vec4(viewPos, 1.0));
+            vec3 worldDir = normalize(mat3(gbufferModelViewInverse) * viewPos);
+            vec3 worldNormal = normal;
+            vec3 skylight = upskylight;
+
+            vec3 glassColor = texcolor.rgb;
+            vec3 background = texture(colortex4, screenPos.xy).rgb;
+            outcol = background * glassColor;
+
+            vec3 worldReflectDir = reflect(worldDir, worldNormal);
+            if(dot(worldReflectDir, worldNormal) < 0.0) {
+                worldReflectDir = reflect(worldReflectDir, worldNormal);
+            }
+
+            vec2 rayTracingPos = vec2(0.0);
+            bool rayTracingIsHit = false;
+            vec3 viewReflectDir = normalize(mat3(gbufferModelView) * worldReflectDir);
+            screenRayTracingDDA(viewPos, viewReflectDir, rayTracingPos, rayTracingIsHit);
+
+            if(rayTracingIsHit) {
+                float hitBlockID = texture(colortex1, rayTracingPos).b * 10000.0;
+                if(abs(hitBlockID - 9999.0) < 0.5) rayTracingIsHit = false;
+            }
+
+            vec3 rayTracingCol;
+            if(rayTracingIsHit) {
+                vec2 prevUV = getPreCoord(rayTracingPos.xy);
+                rayTracingCol = texture(colortex7, outScreen(prevUV) ? rayTracingPos.xy : prevUV).rgb;
+            } else {
+                #ifdef DIM_END
+                    rayTracingCol = vec3(0.0);
+                    rayTracingCol += render_stars(worldReflectDir);
+                    _vcRender(rayTracingCol, worldReflectDir, blueNoise, 1e6);
+                #else
+                    rayTracingCol = sampleSkybox(worldReflectDir);
+                    vec3 trans = TransToAtmos(cameraLocation, worldReflectDir);
+                    rayTracingCol = drawSun(rayTracingCol, worldReflectDir, trans);
+                    #ifdef REFLECTED_CLOUD
+                        vec4 cloudHigh = RenderCloudHigh(cameraLocation, worldReflectDir, lightDir, lightLuminance);
+                        rayTracingCol = rayTracingCol * cloudHigh.a + cloudHigh.rgb;
+
+                        vec4 cloud2D = RenderCloud2D(cameraLocation, worldReflectDir, lightDir, lightLuminance);
+                        rayTracingCol = rayTracingCol * cloud2D.a + cloud2D.rgb;
+
+                        vec4 cloud3D = RenderCloud(cameraLocation, worldReflectDir, lightDir, lightLuminance, skylight);
+                        rayTracingCol = rayTracingCol * cloud3D.a + cloud3D.rgb;
+                    #endif
+                    rayTracingCol *= lmcoord.y;
+                #endif
+
+                #ifdef REFLECTED_FOG
+                    vec4 reflFog = RenderVFog(worldReflectDir, 1e6, lightDir, lightLuminance, skylight, 1.0);
+                    rayTracingCol = rayTracingCol * reflFog.a + reflFog.rgb;
+                #endif
+            }
+
+            float fresnel = fresnelSchlick(max0(dot(worldNormal, -worldDir)), 0.04);
+            outcol = mix(outcol, rayTracingCol, fresnel);
         } else {
             outcol = texture(colortex4, screenPos.xy).rgb;
             outcol = mix(outcol, GammaToLinear(texcolor.rgb) * lightcol * 0.5, texcolor.a * 0.2);

@@ -63,6 +63,7 @@ varying vec3 worldPos;
 
      #include "/lib/parallax.glsl"
      #include "/lib/rainpuddles.glsl"
+     #include "/lib/rainripple.glsl"
 
     /* RENDERTARGETS: 0,1,2,3 */
     layout(location = 0) out vec4 color0;
@@ -77,9 +78,14 @@ varying vec3 worldPos;
                                dot(lightDir, tbnMatrix[1]),
                                dot(lightDir, tbnMatrix[2]));
             vec2 pomUV = parallaxOcculusionMappingShadow(texcoord, viewDirTS, lDirTS, tileBounds, pomRayDepth, pomShadow);
+
+            vec3 pomOffsetTS = vec3(0.0, 0.0, -pomRayDepth);
+            vec3 pomOffsetWS = tbnMatrix * pomOffsetTS;
+            vec3 correctedWorldPos = worldPos + pomOffsetWS;
         #else
             vec2 pomUV = texcoord;
             float pomShadow = 1.0;
+            vec3 correctedWorldPos = worldPos;
         #endif
 
         vec4 texcolor = texture(gtexture, pomUV);
@@ -103,7 +109,12 @@ varying vec3 worldPos;
         vec4 specularData = texture(specular, pomUV);
 
         #ifdef RAIN_PUDDLES
-            rainPuddles(worldPos, normal, tbnMatrix, lmcoord, mappedNormal, specularData);
+            rainPuddles(correctedWorldPos, normal, tbnMatrix, lmcoord, mappedNormal, specularData);
+        #endif
+
+        #ifdef RAIN_SPLASH
+            float rWet = clamp(lmcoord.y * 2.0 - 1.0, 0.0, 1.0) * rainStrength;
+            mappedNormal = rainR(correctedWorldPos, normal, mappedNormal, rWet);
         #endif
 
         color0 = vec4(texcolor.rgb, 1.0);

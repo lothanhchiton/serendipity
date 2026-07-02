@@ -98,6 +98,8 @@ uniform sampler2D cloudMapTex;
 
 uniform float worldTimeCounter;
 
+uniform sampler2D rippleTex;
+
 #ifdef FSH
     ivec2 texelUV = ivec2(gl_FragCoord.xy);
 #endif

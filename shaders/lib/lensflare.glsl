@@ -47,6 +47,37 @@
         return saturate(1.0 - actualLum / clearLum);
     }
 
+    vec3 getSunGlassTint(vec2 sunUV) {
+        const int N = 5;
+        vec3 tintSum = vec3(0.0);
+        int count = 0;
+
+        for (int i = 0; i < N; i++) {
+            vec2 s;
+            if (i == 0) {
+                s = sunUV;
+            } else {
+                float a = float(i - 1) * (6.28318530718 / float(N - 1));
+                s = sunUV + vec2(cos(a), sin(a)) * 0.012;
+            }
+            if (!inScreen(s)) continue;
+
+            float solidDepth = texture(depthtex1, s).r;
+            float transDepth = texture(depthtex0, s).r;
+
+            if (solidDepth >= 1.0 && transDepth < 1.0) {
+                tintSum += texture(colortex0, s).rgb;
+                count++;
+            }
+        }
+
+        if (count == 0) return vec3(1.0);
+
+        vec3 avgCol = tintSum / float(count);
+        float lum = max(getLuminance(avgCol), 0.001);
+        return saturate(avgCol / lum);
+    }
+
     vec2 GetDistOffset(vec2 uv, vec2 pxoffset) {
         vec2 tocenter = uv.xy;
         vec3 prep = normalize(vec3(tocenter.y, -tocenter.x, 0.0));
@@ -114,6 +145,8 @@
         float finalVis = vis * (1.0 - cOcclusion(sunScreen.xy)) * rainFade;
         if (finalVis < 0.01) return vec3(0.0);
 
+        vec3 glassTint = getSunGlassTint(sunScreen.xy);
+
         float aspectRatio = viewSize.x / viewSize.y;
         float fovFactor = max(gbufferProjection[1][1], 2.0);
 
@@ -159,6 +192,8 @@
 
         vec3 suncol = texelFetch(colortex5, ivec2(viewSize - 1.0) - ivec2(0, 0), 0).rgb;
         lf *= suncol * finalVis * saturate(sunDir.y * 5.0 + 0.2);
+
+        lf *= glassTint;
 
         return lf;
     }
